@@ -1,0 +1,30 @@
+name: Archive(Staging)
+
+on:
+  schedule:
+    - cron: 0 0,12 * * *
+  workflow_dispatch:
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: staging
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.10.0-rc.2"
+
+      - name: Run
+        run: |
+          make install
+          MY_GITHUB_TOKEN=${{ secrets.MY_GITHUB_TOKEN }} make staging
+
+      - name: Upload log artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: log.txt
+          path: |
+            log.txt

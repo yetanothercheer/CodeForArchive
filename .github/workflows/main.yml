@@ -1,0 +1,35 @@
+name: Archive
+
+on:
+  schedule:
+    - cron: 0 * * * *
+  workflow_dispatch:
+
+jobs:
+  merge_schedule_for_checked_pull_reqeust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: gr2m/merge-schedule-action@v1
+        with:
+          merge_method: rebase
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Wait a second
+        run: |
+          sleep 1
+
+  archive:
+    needs: merge_schedule_for_checked_pull_reqeust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.10.0-rc.2"
+
+      - name: Run
+        run: |
+          make install
+          MY_GITHUB_TOKEN=${{ secrets.MY_GITHUB_TOKEN }} make prod

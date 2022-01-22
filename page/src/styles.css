@@ -1,0 +1,98 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 24px;
+  line-height: 1em;
+}
+
+pre {
+  font-size: 12px;
+}
+
+.kaiti {
+  font-family: Kaiti;
+}
+
+details summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+#app-root {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+#wip {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0px;
+  height: 0px;
+  z-index: 10000;
+}
+
+#wip img {
+  position: absolute;
+  right: 0px;
+  height: 300px;
+  opacity: 0.7;
+  pointer-events: none;
+  padding: 1em 2em;
+}
+
+input {
+  background-color: red;
+}
+
+.border-just-wiper {
+  border: 1px solid transparent;
+}
+
+.border-wiper {
+  border: 1px solid transparent;
+}
+
+.border-wiper:hover {
+  border: 1px solid var(--border-color);
+}
+
+/* details {
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  padding: 0.5em 0.5em 0;
+} */
+
+/* summary {
+  font-weight: bold;
+  margin: -0.5em -0.5em 0;
+  padding: 0.5em;
+} */
+
+/* details[open] {
+  padding: 0.5em;
+}
+
+details[open] summary {
+  border-bottom: 1px solid #aaa;
+  margin-bottom: 0.5em;
+} */
+
+/* @media (prefers-color-scheme: dark) {
+  html {
+    background: #222;
+    color: #ddd;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  html {
+    background: #eee;
+    color: black;
+  }
+} */

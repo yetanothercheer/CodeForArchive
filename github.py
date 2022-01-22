@@ -1,0 +1,78 @@
+import asyncio
+import base64
+from datetime import datetime
+import datetime
+import json
+import os
+
+import aiohttp
+
+BOT = dict(
+    name="yetanother-archivebot[bot]",
+    email="90119549+yetanother-archivebot[bot]@users.noreply.github.com",
+)
+
+OWNER = "yetanothercheer"
+REPO = "Archive"
+
+
+def token():
+    if "MY_GITHUB_TOKEN" in os.environ:
+        return os.environ["MY_GITHUB_TOKEN"]
+    else:
+        print("! GITHUB_TOKEN is not set, will not commit")
+        return None
+
+
+TOKEN = token()
+
+MAIN = "main"
+STAGING = "staging"
+
+VERSION = "wb.beta"
+
+now = datetime.datetime.now()
+TIME = (
+    f'{(now + datetime.timedelta(seconds=8*3600)).strftime("%Y/%m/%d %H:%M UTC+08:00")}'
+)
+MESSAGE = f"记录于 {TIME}"
+# this path should nerver be existed until now
+PATH = f"{now.year}.{now.month}.{VERSION}/{now.isoformat()}Z.json"
+
+# Create or update file contents
+# https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
+# PUT /repos/{owner}/{repo}/contents/{path}
+HEADERS = {
+    "Accept": "application/vnd.github.v3+json",
+    "Authorization": f"token {TOKEN}",
+}
+
+
+async def commit(content, path=PATH, branch=STAGING, update=False):
+    if TOKEN == None:
+        return
+    async with aiohttp.ClientSession() as session:
+        url = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{path}"
+        if type(content) == dict:
+            content = json.dumps(content)
+        assert type(content) == str
+        content = content.encode("utf-8")
+        base64content = base64.b64encode(content).decode()
+        payload = {
+            "message": MESSAGE,
+            "content": base64content,
+            "sha": "",
+            "branch": branch,
+            "committer": BOT,
+        }
+
+        if update:
+            get_url = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{path}?ref={branch}"
+            async with session.get(get_url, headers=HEADERS) as r:
+                json_body = await r.json()
+                payload["sha"] = json_body["sha"]
+
+        async with session.put(url, json=payload, headers=HEADERS) as r:
+            json_body = await r.json()
+            print(json_body["commit"]["sha"])
+            return dict(status=r.status, data=json_body, url=url)
