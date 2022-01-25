@@ -3,8 +3,7 @@ staging:
 	python main.py
 
 prod:
-	echo 👻👻👻
-	echo python main.py --prod
+	python main.py --prod
 
 dev:
 	ipython --pdb main.py
