@@ -8,8 +8,9 @@ from urllib import parse
 
 import aiohttp
 from bs4 import BeautifulSoup
+import os
+logger = logging.getLogger(os.path.basename(__file__))
 
-logger = logging.getLogger(__file__)
 
 # Proxy http requests, avoid rate limit of server.
 PROXIES = [

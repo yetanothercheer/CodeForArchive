@@ -7,7 +7,8 @@ import logging
 
 import aiohttp
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(os.path.basename(__file__))
+
 
 BOT = dict(
     name="yetanother-archivebot[bot]",

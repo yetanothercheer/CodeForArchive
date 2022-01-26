@@ -7,8 +7,9 @@ import aiohttp
 from bs4 import BeautifulSoup
 
 from get import get
+import os
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(os.path.basename(__file__))
 
 # API
 url_main_realtime = r"https://m.weibo.cn/api/container/getIndex?containerid=106003type%3D25%26t%3D3%26disable_hot%3D1%26filter_type%3Drealtimehot&title=%E5%BE%AE%E5%8D%9A%E7%83%AD%E6%90%9C&extparam=seat%3D1%26pos%3D0_0%26dgr%3D0%26mi_cid%3D100103%26cate%3D10103%26filter_type%3Drealtimehot%26c_type%3D30%26display_time%3D1642858758%26pre_seqid%3D234361947&luicode=10000011&lfid=231583"
@@ -36,8 +37,17 @@ def err():
     sys.stdout.flush()
 
 
+# Copied From: https://gist.github.com/jcayzac/1485005?permalink_comment_id=3587627#gistcomment-3587627
+WIDE_MAP = {i: i + 0xFEE0 for i in range(0x21, 0x7F)}
+WIDE_MAP[0x20] = 0x3000
+
+
+def widen(s):
+    return s.translate(WIDE_MAP)
+
+
 # Consider: https://dev.to/0xbf/use-dot-syntax-to-access-dictionary-key-python-tips-10ec
-async def get_under(url):
+async def get_under(url, title):
     response = await get(url)
     if response.status != 200:
         err()
@@ -95,6 +105,7 @@ async def get_under(url):
                 )
                 i["comments"] = list(comments)
 
+        logger.info(widen(f"#{title[0:16] + '#':<17} {i['text'][0:32]:<32} +{i['comments_count']}"))
         import sys
 
         sys.stdout.write(".")
@@ -105,8 +116,8 @@ async def get_under(url):
 
 
 async def get_title(title):
-    hot = await get_under(url_hot(title))
-    realtime = await get_under(url_realtime(title))
+    hot = await get_under(url_hot(title), title)
+    realtime = await get_under(url_realtime(title), title)
     return dict(title=title, hot=hot, realtime=realtime)
 
 
@@ -116,8 +127,10 @@ async def get_all():
         print("cannot get main page")
         sys.exit(1)
     r = response.data["data"]["cards"][0]["card_group"]
-    titles = map(lambda i: i["desc"], r)
+    titles = list(map(lambda i: i["desc"], r))
+    for i, v in enumerate(titles):
+        logger.info(f"{i + 1:>2} {v}")
     # output = [await get_title(title) for title in list(titles)]
-    output = await asyncio.gather(*[get_title(title) for title in list(titles)])
+    output = await asyncio.gather(*[get_title(title) for title in titles])
     print("")
     return output

@@ -6,16 +6,20 @@ import argparse
 import logging
 
 LOG_FILE = f"log@{ISO_TIME}.txt".replace(":", "_")
+import os
+logger = logging.getLogger(os.path.basename(__file__))
 
 
 async def main():
     logging.basicConfig(
         filename=LOG_FILE,
-        filemode="w",
+        filemode="a",
+        format="[%(asctime)s] %(levelname)s [%(name)s:%(lineno)d] %(message)s",
+        datefmt="%d/%b/%Y %H:%M:%S",
         level=logging.INFO,
     )
 
-    logging.info("Begin")
+    logger.info("main()")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--prod", dest="prod", action="store_true")
