@@ -79,11 +79,12 @@ async def get_under(url, title):
             url = f"https://m.weibo.cn/statuses/extend?id={i['id']}"
             result = await get(url)
             if result.status != 200:
+                i.pop("isLongText")
                 err()
                 continue
             response = result.data
             i["text"] = extract_text_from_html(response["data"]["longTextContent"])
-            i.pop("isLongText")
+        i.pop("isLongText")
 
         if i["comments_count"] > 0:
             url = url_comments(i["id"], i["mid"])
