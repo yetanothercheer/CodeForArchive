@@ -5,7 +5,7 @@ from github import commit, MAIN, STAGING, ISO_TIME
 import argparse
 import logging
 
-LOG_FILE = f"log@{ISO_TIME}.txt"
+LOG_FILE = f"log@{ISO_TIME}.txt".replace(":", "_")
 
 
 async def main():
