@@ -1,13 +1,14 @@
 import asyncio
 import json
-from time import time
-from urllib import parse
+import logging
 import sys
-
-from bs4 import BeautifulSoup
+from time import time
+from typing import Any
+from urllib import parse
 
 import aiohttp
-import logging
+from bs4 import BeautifulSoup
+
 logger = logging.getLogger(__file__)
 
 # Proxy http requests, avoid rate limit of server.
@@ -46,6 +47,15 @@ counter = 0
 rate_limit = []
 CONN_PER_SECOND = 10
 
+from dataclasses import dataclass
+
+
+@dataclass
+class Response:
+    status: int
+    data: Any
+    url: str
+
 
 async def get(url):
     global counter
@@ -64,9 +74,9 @@ async def get(url):
                 logger.error(f"NOT_OK_ERROR {status}: {url}")
             json_body = None
             try:
-              json_body = await resp.json()
+                json_body = await resp.json()
             except:
-              text = await resp.text()
-              logger.error(f"NOT_JSON_EEROR {url}\n{text}")
-              status = -1
-            return dict(status=status, data=json_body, url=url)
+                text = await resp.text()
+                logger.error(f"NOT_JSON_EEROR {url}\n{text}")
+                status = -1
+            return Response(status=status, data=json_body, url=url)

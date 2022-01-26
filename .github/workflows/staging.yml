@@ -23,8 +23,9 @@ jobs:
           MY_GITHUB_TOKEN=${{ secrets.MY_GITHUB_TOKEN }} make staging
 
       - name: Upload log artifacts
+        if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: log.txt
+          name: log
           path: |
-            log.txt
+            log*.txt

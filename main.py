@@ -1,11 +1,11 @@
 import asyncio
 import json
 from crawler import get_all
-from github import commit, MAIN, STAGING
+from github import commit, MAIN, STAGING, ISO_TIME
 import argparse
 import logging
 
-LOG_FILE = "log.txt"
+LOG_FILE = f"log@{ISO_TIME}.txt"
 
 
 async def main():

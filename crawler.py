@@ -1,12 +1,12 @@
 import asyncio
-
-from bs4 import BeautifulSoup
+import logging
+import sys
+from typing import Any, Sequence
 
 import aiohttp
-from get import get
-import  sys
+from bs4 import BeautifulSoup
 
-import logging
+from get import get
 
 logger = logging.getLogger(__file__)
 
@@ -39,47 +39,49 @@ def err():
 # Consider: https://dev.to/0xbf/use-dot-syntax-to-access-dictionary-key-python-tips-10ec
 async def get_under(url):
     response = await get(url)
-    if response["status"] != 200:
+    if response.status != 200:
         err()
         return []
-    response = response["data"]
+    response = response.data
     cards = response["data"]["cards"]
     cards = filter(lambda c: c["card_type"] == 9, cards)
-    info = map(
-        lambda c: dict(
-            text=extract_text_from_html(c["mblog"]["text"]),
-            attitudes_count=c["mblog"]["attitudes_count"],
-            comments_count=c["mblog"]["comments_count"],
-            reposts_count=c["mblog"]["reposts_count"],
-            created_at=c["mblog"]["created_at"],
-            isLongText=c["mblog"]["isLongText"],
-            id=c["mblog"]["id"],
-            mid=c["mblog"]["mid"],
-            user=c["mblog"]["user"]["screen_name"],
-            pic_ids=c["mblog"]["pic_ids"],
-        ),
-        list(cards),
+    info: Sequence[Any] = list(
+        map(
+            lambda c: dict(
+                text=extract_text_from_html(c["mblog"]["text"]),
+                attitudes_count=c["mblog"]["attitudes_count"],
+                comments_count=c["mblog"]["comments_count"],
+                reposts_count=c["mblog"]["reposts_count"],
+                created_at=c["mblog"]["created_at"],
+                isLongText=c["mblog"]["isLongText"],
+                id=c["mblog"]["id"],
+                mid=c["mblog"]["mid"],
+                user=c["mblog"]["user"]["screen_name"],
+                pic_ids=c["mblog"]["pic_ids"],
+            ),
+            list(cards),
+        )
     )
 
     mblogs = []
-    for i in list(info):
+    for i in info:
         if i["isLongText"]:
             url = f"https://m.weibo.cn/statuses/extend?id={i['id']}"
             result = await get(url)
-            if result["status"] != 200:
+            if result.status != 200:
                 err()
                 continue
-            response = result["data"]
+            response = result.data
             i["text"] = extract_text_from_html(response["data"]["longTextContent"])
             i.pop("isLongText")
 
         if i["comments_count"] > 0:
             url = url_comments(i["id"], i["mid"])
             result = await get(url)
-            if result["status"] != 200:
+            if result.status != 200:
                 err()
                 continue
-            result = result["data"]
+            result = result.data
             if "data" in result:
                 comments = result["data"]["data"]
                 comments = map(
@@ -110,10 +112,10 @@ async def get_title(title):
 
 async def get_all():
     response = await get(url_main_realtime)
-    if response["status"] != 200:
+    if response.status != 200:
         print("cannot get main page")
         sys.exit(1)
-    r = response["data"]["data"]["cards"][0]["card_group"]
+    r = response.data["data"]["cards"][0]["card_group"]
     titles = map(lambda i: i["desc"], r)
     # output = [await get_title(title) for title in list(titles)]
     output = await asyncio.gather(*[get_title(title) for title in list(titles)])

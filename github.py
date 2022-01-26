@@ -1,11 +1,13 @@
 import asyncio
 import base64
-from datetime import datetime
 import datetime
 import json
 import os
+import logging
 
 import aiohttp
+
+logger = logging.getLogger(__file__)
 
 BOT = dict(
     name="yetanother-archivebot[bot]",
@@ -20,7 +22,7 @@ def token():
     if "MY_GITHUB_TOKEN" in os.environ:
         return os.environ["MY_GITHUB_TOKEN"]
     else:
-        print("! GITHUB_TOKEN is not set, will not commit")
+        print("! MY_GITHUB_TOKEN is not set, will not commit")
         return None
 
 
@@ -37,7 +39,8 @@ TIME = (
 )
 MESSAGE = f"记录于 {TIME}"
 # this path should nerver be existed until now
-PATH = f"{now.year}.{now.month}.{VERSION}/{now.isoformat()}Z.json"
+ISO_TIME = f"{now.isoformat()}Z"
+PATH = f"{now.year}.{now.month}.{VERSION}/{ISO_TIME}.json"
 
 # Create or update file contents
 # https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
@@ -73,6 +76,10 @@ async def commit(content, path=PATH, branch=STAGING, update=False):
                 payload["sha"] = json_body["sha"]
 
         async with session.put(url, json=payload, headers=HEADERS) as r:
+            text = await r.text()
+            logging.info(f"{r.status}\n{text}")
+
             json_body = await r.json()
-            print(json_body["commit"]["sha"])
+            if r.status in [200, 201]:
+                print(json_body["commit"]["sha"])
             return dict(status=r.status, data=json_body, url=url)

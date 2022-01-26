@@ -1,3 +1,5 @@
 {
-    "python.formatting.provider": "black"
+    "python.formatting.provider": "black",
+    // ms-python doesn't work well in gitpod, use ms-pyright for static analaysis
+    "python.languageServer": "None",
 }
