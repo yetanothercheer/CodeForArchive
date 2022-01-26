@@ -77,10 +77,11 @@ async def commit(content, path=PATH, branch=STAGING, update=False):
                 payload["sha"] = json_body["sha"]
 
         async with session.put(url, json=payload, headers=HEADERS) as r:
-            text = await r.text()
-            logging.info(f"{r.status}\n{text}")
-
-            json_body = await r.json()
+            json_body = None
             if r.status in [200, 201]:
+                json_body = await r.json()
                 print(json_body["commit"]["sha"])
+            else:
+                text = await r.text()
+                print(f"\n{r.status}\n{text}")
             return dict(status=r.status, data=json_body, url=url)
