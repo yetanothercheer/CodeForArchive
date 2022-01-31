@@ -34,13 +34,15 @@ STAGING = "staging"
 
 VERSION = "wb.beta"
 
-now = datetime.datetime.now()
+# Timezone: UTC+08:00
+utc8 = datetime.timezone(datetime.timedelta(hours=8))
+now = datetime.datetime.now(utc8)
 TIME = (
-    f'{(now + datetime.timedelta(seconds=8*3600)).strftime("%Y/%m/%d %H:%M UTC+08:00")}'
+    f'{(now).strftime("%Y/%m/%d %H:%M UTC+08:00")}'
 )
 MESSAGE = f"记录于 {TIME}"
 # this path should nerver be existed until now
-ISO_TIME = f"{now.isoformat()}Z"
+ISO_TIME = f"{now.isoformat()}"
 PATH = f"{now.year}.{now.month}.{VERSION}/{ISO_TIME}.json"
 
 # Create or update file contents
