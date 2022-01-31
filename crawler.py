@@ -9,6 +9,9 @@ from bs4 import BeautifulSoup
 from get import get
 import os
 
+# CONSIDER: serialize json with type hints
+# https://github.com/samuelcolvin/pydantic
+
 logger = logging.getLogger(os.path.basename(__file__))
 
 # API
