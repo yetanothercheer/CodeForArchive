@@ -43,7 +43,7 @@ TIME = (
 MESSAGE = f"记录于 {TIME}"
 # this path should nerver be existed until now
 ISO_TIME = f"{now.isoformat()}"
-PATH = f"{now.year}.{now.month}.{VERSION}/{ISO_TIME}.json"
+PATH = f"{now.year}.{now.month:0>2}.{VERSION}/{ISO_TIME}.json"
 
 # Create or update file contents
 # https://docs.github.com/en/rest/reference/repos#create-or-update-file-contents
