@@ -26,9 +26,7 @@ const getData = async () => {
     return response.data;
   };
 
-  let list = [];
-
-  await Promise.all(
+  let list = (await Promise.all(
     (await getPath(""))
       .filter((d) => d.type === "dir")
       .sort((a, b) => {
@@ -42,9 +40,18 @@ const getData = async () => {
       .map((d) => d.path)
       .map(async (path) => {
         let data = await getPath(path);
-        list = [...data, ...list];
+
+        data.sort((a, b) => {
+          const toNumber = item => {
+            //  strip ".json"
+            let isotime = item.name.split(".")[0];
+            return new Date(isotime).getTime();
+          }
+          return toNumber(a) - toNumber(b);
+        });
+        return data;
       })
-  );
+  )).reduce((a, v) => [...v, ...a], []);
 
   return list;
 };
@@ -221,7 +228,8 @@ const Page = ({ link, full }) => {
 
 const filename2locale = (filename) => {
   filename = filename.slice(0, -5);
-  return new Date(new Date(filename) + 8 * 3600 * 1000 * 0).toLocaleString();
+  // filename already contains timezone.
+  return new Date(new Date(filename)).toLocaleString();
 };
 
 import {
