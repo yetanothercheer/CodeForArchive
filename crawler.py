@@ -100,7 +100,7 @@ async def get_under(url, title):
                 comments = result["data"]["data"]
                 comments = map(
                     lambda c: dict(
-                        created_at=c["created_at"],
+                        # created_at=c["created_at"],
                         like_count=c["like_count"],
                         text=extract_text_from_html(c["text"]),
                         user=c["user"]["screen_name"],
@@ -108,6 +108,9 @@ async def get_under(url, title):
                     comments,
                 )
                 i["comments"] = list(comments)
+
+        i.pop("id")
+        i.pop("mid")
 
         logger.info(widen(f"#{title[0:16] + '#':<17} {i['text'][0:32]:<32} +{i['comments_count']}"))
         import sys
@@ -128,7 +131,7 @@ async def get_title(title):
 async def get_all():
     response = await get(url_main_realtime)
     if response.status != 200:
-        print("cannot get main page")
+        print("Cannot get main page")
         sys.exit(1)
     r = response.data["data"]["cards"][0]["card_group"]
     titles = list(map(lambda i: i["desc"], r))
