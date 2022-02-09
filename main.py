@@ -28,10 +28,12 @@ async def main():
 
     data = await get_all()
     archive = dict(archive=data)
+    # unicode need not to be escaped, set ensure_ascii=False.
+    archive_string = json.dumps(archive,  ensure_ascii=False)
     if args.prod:
-        response = await commit(archive, branch=MAIN)
+        response = await commit(archive_string, branch=MAIN)
     else:
-        response = await commit(archive, branch=STAGING)
+        response = await commit(archive_string, branch=STAGING)
 
 
 if __name__ == "__main__":
