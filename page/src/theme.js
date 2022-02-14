@@ -20,7 +20,7 @@ export const lightTheme = {
   neutralPrimary: "#323130",
   neutralDark: "#201f1e",
   black: "#000000",
-  white: "#ffffff"
+  white: "#ffffff",
 };
 
 export const darkTheme = {
@@ -45,7 +45,7 @@ export const darkTheme = {
   neutralPrimary: "#e6e6e6",
   neutralDark: "#f9f9f9",
   black: "#fcfcfc",
-  white: "#171717"
+  white: "#171717",
 };
 
 export const highContrastTheme = {
@@ -70,5 +70,5 @@ export const highContrastTheme = {
   neutralPrimary: "#ffffff",
   neutralDark: "#f4f4f4",
   black: "#f8f8f8",
-  white: "#000000"
+  white: "#000000",
 };
