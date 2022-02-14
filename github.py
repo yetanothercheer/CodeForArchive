@@ -37,9 +37,7 @@ VERSION = "wb.beta"
 # Timezone: UTC+08:00
 utc8 = datetime.timezone(datetime.timedelta(hours=8))
 now = datetime.datetime.now(utc8)
-TIME = (
-    f'{(now).strftime("%Y/%m/%d %H:%M UTC+08:00")}'
-)
+TIME = f'{(now).strftime("%Y/%m/%d %H:%M UTC+08:00")}'
 MESSAGE = f"记录于 {TIME}"
 # this path should nerver be existed until now
 ISO_TIME = f"{now.isoformat()}"

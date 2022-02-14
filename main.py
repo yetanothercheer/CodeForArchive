@@ -1,3 +1,5 @@
+from report import report
+
 import asyncio
 import json
 from crawler import get_all
