@@ -51,6 +51,7 @@ HEADERS = {
     "Authorization": f"token {TOKEN}",
 }
 
+from report import report
 
 async def commit(content, path=PATH, branch=STAGING, update=False):
     if TOKEN == None:
@@ -83,5 +84,5 @@ async def commit(content, path=PATH, branch=STAGING, update=False):
                 print(json_body["commit"]["sha"])
             else:
                 text = await r.text()
-                print(f"\n{r.status}\n{text}")
+                report.message(f"{text}", "fatal")
             return dict(status=r.status, data=json_body, url=url)
