@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 from get import get
 import os
 
+from report import report
+
 # CONSIDER: serialize json with type hints
 # https://github.com/samuelcolvin/pydantic
 
@@ -112,7 +114,11 @@ async def get_under(url, title):
         i.pop("id")
         i.pop("mid")
 
-        logger.info(widen(f"#{title[0:16] + '#':<17} {i['text'][0:32]:<32} +{i['comments_count']}"))
+        logger.info(
+            widen(
+                f"#{title[0:16] + '#':<17} {i['text'][0:32]:<32} +{i['comments_count']}"
+            )
+        )
         import sys
 
         sys.stdout.write(".")
@@ -131,7 +137,7 @@ async def get_title(title):
 async def get_all():
     response = await get(url_main_realtime)
     if response.status != 200:
-        print("Cannot get main page")
+        report.message("Cannot get main page", "fatal")
         sys.exit(1)
     r = response.data["data"]["cards"][0]["card_group"]
     titles = list(map(lambda i: i["desc"], r))

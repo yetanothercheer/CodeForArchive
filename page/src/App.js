@@ -21,37 +21,41 @@ const getData = async () => {
       owner: "yetanothercheer",
       repo: "Archive",
       path,
-      ref: isStaging ? "staging" : "main"
+      ref: isStaging ? "staging" : "main",
     });
     return response.data;
   };
 
-  let list = (await Promise.all(
-    (await getPath(""))
-      .filter((d) => d.type === "dir")
-      .sort((a, b) => {
-        const toNumber = name => {
-          let parts = name.split(".");
-          return parseInt(parts[0]) * 1000 + parseInt(parts[1])
-        };
-        return toNumber(a.name) - toNumber(b.name);
-      })
-      .reverse()
-      .map((d) => d.path)
-      .map(async (path) => {
-        let data = await getPath(path);
+  let list = (
+    await Promise.all(
+      (
+        await getPath("")
+      )
+        .filter((d) => d.type === "dir")
+        .sort((a, b) => {
+          const toNumber = (name) => {
+            let parts = name.split(".");
+            return parseInt(parts[0]) * 1000 + parseInt(parts[1]);
+          };
+          return toNumber(a.name) - toNumber(b.name);
+        })
+        .reverse()
+        .map((d) => d.path)
+        .map(async (path) => {
+          let data = await getPath(path);
 
-        data.sort((a, b) => {
-          const toNumber = item => {
-            //  strip ".json"
-            let isotime = item.name.split(".")[0];
-            return new Date(isotime).getTime();
-          }
-          return toNumber(a) - toNumber(b);
-        });
-        return data;
-      })
-  )).reduce((a, v) => [...v, ...a], []);
+          data.sort((a, b) => {
+            const toNumber = (item) => {
+              //  strip ".json"
+              let isotime = item.name.split(".")[0];
+              return new Date(isotime).getTime();
+            };
+            return toNumber(a) - toNumber(b);
+          });
+          return data;
+        })
+    )
+  ).reduce((a, v) => [...v, ...a], []);
 
   return list;
 };
@@ -124,7 +128,7 @@ const SubSection = ({ blogs }) => {
           style={{
             boxShadow: theme.effects.elevation8,
             padding: "0.5em 1em",
-            marginTop: ".5em"
+            marginTop: ".5em",
           }}
         >
           <Text variant={"small"} block>
@@ -135,7 +139,7 @@ const SubSection = ({ blogs }) => {
           <div
             style={{
               display: "flex",
-              flexDirection: "column"
+              flexDirection: "column",
               // width: '100000px'
             }}
             onWheel={(e) => {
@@ -180,15 +184,16 @@ const SubSection = ({ blogs }) => {
               // ))}
             }
           </div>
-          {blog.comments && blog.comments.map((c) => (
-            <Text
-              style={{ marginTop: ".5em", marginLeft: "1em" }}
-              variant={"small"}
-              block
-            >
-              <b>{c.user}</b>: {c.text} {c.like_count}👍
-            </Text>
-          ))}
+          {blog.comments &&
+            blog.comments.map((c) => (
+              <Text
+                style={{ marginTop: ".5em", marginLeft: "1em" }}
+                variant={"small"}
+                block
+              >
+                <b>{c.user}</b>: {c.text} {c.like_count}👍
+              </Text>
+            ))}
         </div>
       ))}
     </div>
@@ -204,7 +209,6 @@ const Page = ({ link, full }) => {
   if (!data.archive) {
     return <p>Data is not recognizable.</p>;
   }
-
 
   return (
     <div>
@@ -236,14 +240,14 @@ import {
   Dropdown,
   DropdownMenuItemType,
   IDropdownStyles,
-  IDropdownOption
+  IDropdownOption,
 } from "@fluentui/react/lib/Dropdown";
 import {
   DefaultPalette,
   Stack,
   IStackStyles,
   IStackTokens,
-  IStackItemStyles
+  IStackItemStyles,
 } from "@fluentui/react";
 
 // import { Card } from "@fluentui/react-cards";
@@ -267,7 +271,7 @@ const useStoredTheme = (defaultTheme) => {
     (newTheme) => {
       localStorage.setItem(ID, JSON.stringify(newTheme));
       setT(newTheme);
-    }
+    },
   ];
 };
 
@@ -294,13 +298,13 @@ const Theme = ({ storedTheme, setStoredTheme }) => {
             right: 0,
             padding: "7px 7px",
             minWidth: "150px",
-            boxShadow: "0 6.4px 14.4px 0 #333,0 1.2px 3.6px 0 #aaa"
+            boxShadow: "0 6.4px 14.4px 0 #333,0 1.2px 3.6px 0 #aaa",
           }}
         >
           {[
             { name: "Light", theme: lightTheme },
             { name: "Dark", theme: darkTheme },
-            { name: "High Contrast", theme: highContrastTheme }
+            { name: "High Contrast", theme: highContrastTheme },
           ].map((t) => (
             <DefaultButton
               className={t.name === storedTheme.name ? "" : "border-just-wiper"}
@@ -308,7 +312,7 @@ const Theme = ({ storedTheme, setStoredTheme }) => {
                 setStoredTheme(t);
               }}
               style={{
-                textAlign: "right"
+                textAlign: "right",
               }}
             >
               {t.name}
@@ -321,16 +325,16 @@ const Theme = ({ storedTheme, setStoredTheme }) => {
 };
 
 const appTheme = createTheme({
-  palette: lightTheme
+  palette: lightTheme,
 });
 
-export default function App() {
+function App() {
   const [link, setLink] = useState();
   const [full, setFull] = useState();
 
   const [storedTheme, setStoredTheme] = useStoredTheme({
     name: "Light",
-    theme: lightTheme
+    theme: lightTheme,
   });
 
   console.log(storedTheme);
@@ -342,24 +346,27 @@ export default function App() {
     setLink(data[0].download_url);
   }, []);
 
-  if (!link || !full) return (<ThemeProvider
-    theme={createTheme({
-      palette: storedTheme.theme
-    })}
-  >
-    <div id="app-root" style={{ padding: ".5em .5em", minHeight: "100vh" }}>
-      <pre>Get Links...</pre>
-    </div>
-  </ThemeProvider>);
+  if (!link || !full)
+    return (
+      <ThemeProvider
+        theme={createTheme({
+          palette: storedTheme.theme,
+        })}
+      >
+        <div id="app-root" style={{ padding: ".5em .5em", minHeight: "100vh" }}>
+          <pre>Get Links...</pre>
+        </div>
+      </ThemeProvider>
+    );
 
   const dropdownStyles = {
-    dropdown: { width: 300 }
+    dropdown: { width: 300 },
   };
 
   const stackStyles = {
     root: {
-      background: DefaultPalette.themeTertiary
-    }
+      background: DefaultPalette.themeTertiary,
+    },
   };
   const stackItemStyles = {
     root: {
@@ -368,13 +375,13 @@ export default function App() {
       color: DefaultPalette.white,
       display: "flex",
       height: 50,
-      justifyContent: "center"
-    }
+      justifyContent: "center",
+    },
   };
   // Tokens definition
   const stackTokens = {
     childrenGap: 5,
-    padding: 10
+    padding: 10,
   };
 
   // console.log(storedTheme);
@@ -383,7 +390,7 @@ export default function App() {
   return (
     <ThemeProvider
       theme={createTheme({
-        palette: storedTheme.theme
+        palette: storedTheme.theme,
       })}
     >
       <div id="app-root" style={{ padding: ".5em .5em", minHeight: "100vh" }}>
@@ -420,5 +427,19 @@ export default function App() {
         <Page link={link} full={full} />
       </div>
     </ThemeProvider>
+  );
+}
+
+import wip from "./work-in-progress-woman_at_work-o-f-daisy.png";
+
+export default function () {
+  return (
+    <React.Fragment>
+      <div id="wip">
+        {/* <!-- image source: https://publicdomainvectors.org/photos/work-in-progress-woman_at_work-o-f-daisy.png --> */}
+        <img src={wip} />
+      </div>
+      <App />
+    </React.Fragment>
   );
 }
