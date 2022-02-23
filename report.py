@@ -14,8 +14,9 @@ class Report:
     def exception(self, err):
         sentry_sdk.capture_exception(err)
 
-    def message(self, msg, level="info"):
-        print(f"Report:{level}:{msg}")
+    def message(self, msg, level="info", also_print=True):
+        if also_print:
+            print(f"Report:{level}:{msg}")
         sentry_sdk.capture_message(msg, level)
 
 

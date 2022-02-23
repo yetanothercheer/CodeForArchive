@@ -9,6 +9,7 @@ from urllib import parse
 import aiohttp
 from bs4 import BeautifulSoup
 import os
+
 logger = logging.getLogger(os.path.basename(__file__))
 
 
@@ -67,17 +68,29 @@ async def get(url):
     rate_limit.append(time())
 
     counter += 1
-    async with aiohttp.ClientSession() as session:
-        url = PROXIES[counter % len(PROXIES)] + parse.quote(url)
-        async with session.get(url) as resp:
-            status = resp.status
-            if status != 200:
-                logger.error(f"NOT_OK_ERROR {status}: {url}")
-            json_body = None
-            try:
-                json_body = await resp.json()
-            except:
-                text = await resp.text()
-                logger.error(f"NOT_JSON_EEROR {url}\n{text}")
-                status = -1
-            return Response(status=status, data=json_body, url=url)
+    original_url = url
+
+    what = []
+    retry = 0
+    while retry < 10:
+        retry += 1
+        if retry > 1:
+            await asyncio.sleep(1)
+        async with aiohttp.ClientSession() as session:
+            url = PROXIES[counter % len(PROXIES)] + parse.quote(original_url)
+            async with session.get(url) as resp:
+                status = resp.status
+                if status != 200:
+                    what.append(f"{status} {original_url}")
+                    continue
+                json_body = None
+                try:
+                    json_body = await resp.json()
+                except:
+                    text = await resp.text()
+                    what.append(f"{status} {original_url} {text}")
+                    continue
+                return Response(status=status, data=json_body, url=url)
+
+    logger.error("Retry Failed.")
+    return Response(status=-1, data=None, url=url)
