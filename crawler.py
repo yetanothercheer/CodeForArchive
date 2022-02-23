@@ -63,7 +63,8 @@ async def get_under(url, title):
     cards = list(filter(lambda c: c["card_type"] == 9, top_cards))
 
     card_groups = filter(lambda c: c["card_type"] == 11, top_cards)
-    for card_group in list(card_groups):
+    # [::-1] preserves order.
+    for card_group in list(card_groups)[::-1]:
         new_cards = list(
             filter(lambda c: c["card_type"] == 9, card_group["card_group"])
         )
