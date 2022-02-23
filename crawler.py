@@ -125,6 +125,8 @@ async def get_under(url, title):
         sys.stdout.flush()
         mblogs.append(i)
 
+    if len(mblogs) == 0:
+        report.message("EmptyResultWarning", level="warn", also_print=False)
     return mblogs
 
 
