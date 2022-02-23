@@ -58,8 +58,17 @@ async def get_under(url, title):
         err()
         return []
     response = response.data
-    cards = response["data"]["cards"]
-    cards = filter(lambda c: c["card_type"] == 9, cards)
+    top_cards = response["data"]["cards"]
+
+    cards = list(filter(lambda c: c["card_type"] == 9, top_cards))
+
+    card_groups = filter(lambda c: c["card_type"] == 11, top_cards)
+    for card_group in list(card_groups):
+        new_cards = list(
+            filter(lambda c: c["card_type"] == 9, card_group["card_group"])
+        )
+        cards = new_cards + cards
+
     info: Sequence[Any] = list(
         map(
             lambda c: dict(
@@ -74,7 +83,7 @@ async def get_under(url, title):
                 user=c["mblog"]["user"]["screen_name"],
                 pic_ids=c["mblog"]["pic_ids"],
             ),
-            list(cards),
+            cards,
         )
     )
 
