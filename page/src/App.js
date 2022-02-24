@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import "./styles.css";
 
 import { Octokit } from "@octokit/rest";
@@ -123,8 +123,9 @@ const SubSection = ({ blogs }) => {
         disabled={selectedBlogs == realtime}
       />
 
-      {selectedBlogs.map((blog) => (
+      {selectedBlogs.map((blog, i) => (
         <div
+          key={i}
           style={{
             boxShadow: theme.effects.elevation8,
             padding: "0.5em 1em",
@@ -185,8 +186,9 @@ const SubSection = ({ blogs }) => {
             }
           </div>
           {blog.comments &&
-            blog.comments.map((c) => (
+            blog.comments.map((c, i) => (
               <Text
+                key={i}
                 style={{ marginTop: ".5em", marginLeft: "1em" }}
                 variant={"small"}
                 block
@@ -203,8 +205,13 @@ const SubSection = ({ blogs }) => {
 const Page = ({ link, full }) => {
   const { data, error } = useSWR(link, fetcher);
 
-  if (error) return <pre>failed to load</pre>;
-  if (!data) return <pre>Get Page From: {link}.</pre>;
+  if (error) return <pre>Failed to load.</pre>;
+  if (!data)
+    return (
+      <React.Fragment>
+        <Loading message={`Downloading data...`} />
+      </React.Fragment>
+    );
 
   if (!data.archive) {
     return <p>Data is not recognizable.</p>;
@@ -217,7 +224,7 @@ const Page = ({ link, full }) => {
         {link == full[full.length - 1].download_url && '(Lastet)'}
       </p> */}
       {data.archive.map((i, index) => (
-        <details style={{ marginTop: ".5em" }}>
+        <details key={index} style={{ marginTop: ".5em" }}>
           <summary>
             <Text variant={"xLarge"}>
               {index + 1} {i.title}
@@ -254,6 +261,12 @@ import {
 
 import { useTheme } from "@fluentui/react";
 
+const ThemeMap = {
+  Light: lightTheme,
+  Dark: darkTheme,
+  "High Contrast": highContrastTheme,
+};
+
 const useStoredTheme = (defaultTheme) => {
   const ID = "StoredTheme";
   let [t, setT] = useState(defaultTheme);
@@ -261,15 +274,21 @@ const useStoredTheme = (defaultTheme) => {
   let storedTheme = localStorage.getItem(ID);
   if (storedTheme !== null) {
     // setT(JSON.parse(storedTheme));
-    t = JSON.parse(storedTheme);
+    // t = JSON.parse(storedTheme);
+    if (Object.keys(ThemeMap).includes(storedTheme)) {
+      t = storedTheme;
+    }
   }
 
-  console.log(storedTheme);
+  // console.log(storedTheme);
 
   return [
-    t,
+    {
+      name: t,
+      theme: ThemeMap[t],
+    },
     (newTheme) => {
-      localStorage.setItem(ID, JSON.stringify(newTheme));
+      localStorage.setItem(ID, newTheme);
       setT(newTheme);
     },
   ];
@@ -279,7 +298,7 @@ const Theme = ({ storedTheme, setStoredTheme }) => {
   const [clicked, setClicked] = useState(false);
   const theme = useTheme();
 
-  console.log(storedTheme.name);
+  // console.log(storedTheme.name);
   return (
     <div style={{ position: "relative" }}>
       <DefaultButton
@@ -301,13 +320,10 @@ const Theme = ({ storedTheme, setStoredTheme }) => {
             boxShadow: "0 6.4px 14.4px 0 #333,0 1.2px 3.6px 0 #aaa",
           }}
         >
-          {[
-            { name: "Light", theme: lightTheme },
-            { name: "Dark", theme: darkTheme },
-            { name: "High Contrast", theme: highContrastTheme },
-          ].map((t) => (
+          {Object.keys(ThemeMap).map((t, i) => (
             <DefaultButton
-              className={t.name === storedTheme.name ? "" : "border-just-wiper"}
+              key={i}
+              className={t === storedTheme ? "" : "border-just-wiper"}
               onClick={() => {
                 setStoredTheme(t);
               }}
@@ -315,7 +331,7 @@ const Theme = ({ storedTheme, setStoredTheme }) => {
                 textAlign: "right",
               }}
             >
-              {t.name}
+              {t}
             </DefaultButton>
           ))}
         </div>
@@ -328,97 +344,137 @@ const appTheme = createTheme({
   palette: lightTheme,
 });
 
+import { VirtualizedComboBox } from "@fluentui/react";
+
+const comboBoxStyles = { root: { maxWidth: "300px" } };
+
 function App() {
   const [link, setLink] = useState();
   const [full, setFull] = useState();
+  const [error, setError] = useState();
 
-  const [storedTheme, setStoredTheme] = useStoredTheme({
-    name: "Light",
-    theme: lightTheme,
-  });
-
-  console.log(storedTheme);
+  const [storedTheme, setStoredTheme] = useStoredTheme("Light");
 
   useEffect(async () => {
-    let data = await getData();
-    data.reverse();
-    setFull(data);
-    setLink(data[0].download_url);
+    try {
+      let data = await getData();
+      data.reverse();
+      setFull(data);
+      setLink(data[0].download_url);
+
+      /* Let VirtualizedComboBox looks not like an input. */
+      const _ = setInterval(() => {
+        const i = document.querySelector("input");
+        if (i) {
+          i.setAttribute("inputmode", "none");
+          clearInterval(_);
+        }
+      }, 20);
+    } catch (e) {
+      setError(e);
+    }
   }, []);
 
-  if (!link || !full)
+  const memorizedOptions = useMemo(() => {
+    return (
+      full &&
+      full.map((f) => {
+        let v = filename2locale(f.name);
+        return { key: f.download_url, text: v };
+      })
+    );
+  }, [full]);
+
+  if (error) {
     return (
       <ThemeProvider
+        style={{ height: "100%" }}
         theme={createTheme({
           palette: storedTheme.theme,
         })}
       >
-        <div id="app-root" style={{ padding: ".5em .5em", minHeight: "100vh" }}>
-          <pre>Get Links...</pre>
+        <div
+          id="app-root"
+          style={{
+            padding: ".5em .5em",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <Text variant="xLarge">Error</Text>
+          <Text variant="small" style={{ whiteSpace: "pre-wrap" }}>
+            {JSON.stringify(error, null, "\t")}
+          </Text>
+        </div>
+      </ThemeProvider>
+    );
+  }
+
+  if (!link || !full)
+    return (
+      <ThemeProvider
+        style={{ height: "100%" }}
+        theme={createTheme({
+          palette: storedTheme.theme,
+        })}
+      >
+        <div id="app-root" style={{ padding: ".5em .5em", display: "flex" }}>
+          <Loading message="Getting data from https://github.com/yetanothercheer/Archive" />
         </div>
       </ThemeProvider>
     );
 
-  const dropdownStyles = {
-    dropdown: { width: 300 },
-  };
-
-  const stackStyles = {
-    root: {
-      background: DefaultPalette.themeTertiary,
-    },
-  };
-  const stackItemStyles = {
-    root: {
-      alignItems: "center",
-      background: DefaultPalette.themePrimary,
-      color: DefaultPalette.white,
-      display: "flex",
-      height: 50,
-      justifyContent: "center",
-    },
-  };
-  // Tokens definition
-  const stackTokens = {
-    childrenGap: 5,
-    padding: 10,
-  };
-
-  // console.log(storedTheme);
-
   // render data
   return (
     <ThemeProvider
+      style={{ minHeight: "100%" }}
       theme={createTheme({
         palette: storedTheme.theme,
       })}
     >
-      <div id="app-root" style={{ padding: ".5em .5em", minHeight: "100vh" }}>
-        {/* <Stack horizontal styles={stackStyles} tokens={stackTokens}>
-        <Stack.Item grow={1} styles={stackItemStyles} />
-        <Stack.Item grow={2} styles={stackItemStyles}>
-          Grow is 2
-        </Stack.Item>
-        <Stack.Item grow styles={stackItemStyles}>
-          Grow is 1
-        </Stack.Item>
-      </Stack> */}
+      <div
+        id="app-root"
+        style={{
+          padding: ".5em .5em",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center" }}>
-          <Dropdown
-            // placeholder="Select an option"
-            // label="Time Picker"
-            onChange={(e, o, i) => setLink(full[i].download_url)}
-            options={full.map((f) => {
-              let v = filename2locale(f.name);
-              return { key: f.download_url, text: v };
-            })}
-            defaultSelectedKey={link}
-            styles={dropdownStyles}
-          />
-          <div style={{ flexBasis: "100%" }}></div>
+          <div style={{ flexBasis: "100%" }}>
+            {/* // https://github.com/microsoft/fluentui/issues/7561 */}
+            <VirtualizedComboBox
+              // defaultSelectedKey={link}
+              onChange={(e, o, i) => {
+                setLink(full[i].download_url);
+              }}
+              allowFreeform={false}
+              // autoComplete="on"
+              options={memorizedOptions}
+              // persistMenu={true}
+              // scrollSelectedToTop={true}
+              dropdownMaxWidth={300}
+              useComboBoxAsMenuWidth
+              styles={comboBoxStyles}
+              selectedKey={link}
+              onClick={() => {
+                // `scrollSelectedToTop` seems not working. A dirty workaround:
+                window.__workaround = setInterval(() => {
+                  const list = document.querySelector(".ms-Callout-main");
+                  if (list) {
+                    if (list.scrollTop == 0 && window.__workaround_saved != 0) {
+                      list.scrollTop = window.__workaround_saved;
+                    } else {
+                      window.__workaround_saved = list.scrollTop;
+                    }
+                  }
+                }, 100);
+              }}
+            />
+          </div>
           <Theme storedTheme={storedTheme} setStoredTheme={setStoredTheme} />
         </div>
-        <Text variant="small">
+        <Text variant="small" block nowrap>
           <span style={{ marginRight: ".2em" }}>Source:</span>
           <Link target="_blank" href={link} underline>
             {decodeURIComponent(link)}
@@ -431,6 +487,7 @@ function App() {
 }
 
 import wip from "./work-in-progress-woman_at_work-o-f-daisy.png";
+import Loading from "./Loading";
 
 export default function () {
   return (
