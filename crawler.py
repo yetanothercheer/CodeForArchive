@@ -151,7 +151,11 @@ async def get_all():
     if response.status != 200:
         report.message("Cannot get main page", "fatal")
         sys.exit(1)
-    r = response.data["data"]["cards"][0]["card_group"]
+    response_data = response.data
+    if "sorry" in response_data:
+        print(response_data)
+        sys.exit(2)
+    r = response_data["data"]["cards"][0]["card_group"]
     titles = list(map(lambda i: i["desc"], r))
     for i, v in enumerate(titles):
         logger.info(f"{i + 1:>2} {v}")
