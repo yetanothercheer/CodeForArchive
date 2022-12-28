@@ -548,7 +548,7 @@ function SearchPage() {
           }}
         >
 
-          <Link href="..">
+          <Link href=".">
             <Text style={{ fontWeight: 350 }} variant={"small"}>
               &lt; Go Back
             </Text>
