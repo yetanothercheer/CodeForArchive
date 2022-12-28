@@ -8,7 +8,9 @@ export function Search() {
     })
 }
 
-Search.prototype.search = async function (arg) {
-    let { hits, limit, offset } = await this.client.index('test').search(arg);
-    return hits
+Search.prototype.search = async function (arg, page = 1) {
+    let { hits, limit, offset, totalPages } = await this.client.index('test').search(arg, {
+        page
+    });
+    return { hits, totalPages };
 }

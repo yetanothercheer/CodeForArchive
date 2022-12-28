@@ -500,10 +500,16 @@ function SearchPage() {
 
   const [t, setT] = useState(null);
   const [data, setData] = useState(null);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPage] = useState(0);
 
   useEffect(async () => {
     if (t) {
-      setData(await (new Search()).search(t))
+      let page = 0;
+      let { hits, totalPages } = await (new Search()).search(t, page + 1);
+      setData(hits);
+      setPage(page + 1);
+      setTotalPage(totalPages);
     }
   }, [t]);
 
@@ -511,6 +517,15 @@ function SearchPage() {
     if (event.key == "Enter") {
       event.preventDefault();
       setT(event.target.value);
+    }
+  }
+
+  const onLoadMore = async () => {
+    if (page < totalPages) {
+      let { hits, totalPages } = await (new Search()).search(t, page + 1);
+      setData([...data, ...hits]);
+      setPage(page + 1);
+      setTotalPage(totalPages);
     }
   }
 
@@ -559,6 +574,10 @@ function SearchPage() {
               <SubSection blogs={[i.hot, i.realtime]} />
             </details>
           ))}
+
+          {(page < totalPages) &&
+            <DefaultButton style={{marginTop: "1em"}} text="LOAD MORE" onClick={onLoadMore} />
+          }
         </div>
       </ThemeProvider>
     </div>
