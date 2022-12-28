@@ -480,7 +480,7 @@ function App() {
             {decodeURIComponent(link)}
           </Link>
         </Text>
-        <Link href="/search">
+        <Link href="search">
           <Text className="try_search" variant="mediumPlus" block nowrap>TRY SEARCH HERE</Text>
         </Link>
 
