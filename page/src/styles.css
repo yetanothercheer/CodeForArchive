@@ -59,7 +59,7 @@ input[type="text"] {
   caret-color: transparent;
 }
 
-input::selection {
+input::selection :not(.CHANGE_ME) {
   background: transparent;
 }
 
@@ -126,4 +126,12 @@ details[open] summary {
 
 .flex-1 {
   flex: 1;
+}
+
+.try_search {
+  font-weight: 900;
+  background: linear-gradient(90deg, #BE93C5 0%, #7BC6CC 20%);
+  background-clip: text;
+  color: transparent;
+
 }

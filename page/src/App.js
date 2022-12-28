@@ -480,6 +480,10 @@ function App() {
             {decodeURIComponent(link)}
           </Link>
         </Text>
+        <Link href="/search">
+          <Text className="try_search" variant="mediumPlus" block nowrap>TRY SEARCH HERE</Text>
+        </Link>
+
         <Page link={link} full={full} />
       </div>
     </ThemeProvider>
@@ -489,7 +493,85 @@ function App() {
 import wip from "./work-in-progress-woman_at_work-o-f-daisy.png";
 import Loading from "./Loading";
 
+import { Search } from './search'
+import { TextField } from '@fluentui/react/lib/TextField';
+
+function SearchPage() {
+
+  const [t, setT] = useState(null);
+  const [data, setData] = useState(null);
+
+  useEffect(async () => {
+    if (t) {
+      setData(await (new Search()).search(t))
+    }
+  }, [t]);
+
+  const onKeyPress = (event) => {
+    if (event.key == "Enter") {
+      event.preventDefault();
+      setT(event.target.value);
+    }
+  }
+
+  const [storedTheme, setStoredTheme] = useStoredTheme("Light");
+
+  return (
+    <div>
+      <ThemeProvider
+        style={{ height: "100%" }}
+        theme={createTheme({
+          palette: storedTheme.theme,
+        })}
+      >
+        <div
+          id="app-root"
+          style={{
+            padding: ".5em .5em",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+
+          <Link href="..">
+            <Text style={{ fontWeight: 350 }} variant={"small"}>
+              &lt; Go Back
+            </Text>
+          </Link>
+          <TextField className="CHANGE_ME" style={{ caretColor: "auto" }} label="Input and press Enter to search" onKeyPress={onKeyPress} />
+
+          {data && data.map((i, index) => (
+            <details key={index + i.filename} style={{ marginTop: ".5em" }}>
+              <summary>
+                <Text variant={"xLarge"}>
+                  {index + 1} {i.title}
+                </Text>
+                <Text style={{ float: "right" }} variant={"small"}>
+                  {
+
+                    new Date(
+                      Date.parse(i.filename.match(/(((?!\/).)*)\.json/)[1])
+                    ).toLocaleDateString()
+
+                  }
+                </Text>
+              </summary>
+              <SubSection blogs={[i.hot, i.realtime]} />
+            </details>
+          ))}
+        </div>
+      </ThemeProvider>
+    </div>
+  );
+
+
+}
+
 export default function () {
+  if (location.href.endsWith("/search")) {
+    return (<SearchPage />);
+  }
+
   return (
     <React.Fragment>
       <div id="wip">
