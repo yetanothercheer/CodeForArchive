@@ -1,66 +1,14 @@
 import React, { useEffect, useState, useMemo } from "react";
 import "./styles.css";
 
-import { Octokit } from "@octokit/rest";
-import useSWR from "swr";
-
 // : < This is frustrating...
 // import { ThemeProvider } from "@fluentui/react-theme-provider";
 import { ThemeProvider } from "@fluentui/react";
 import { createTheme } from "@fluentui/theme";
 
 import { lightTheme, darkTheme, highContrastTheme } from "./theme";
-const octokit = new Octokit();
-window.octokit = octokit;
 
-// Compare: https://docs.github.com/en/rest/reference/repos/#list-organization-repositories
-const getData = async () => {
-  let isStaging = window.location.href.endsWith("/staging");
-  const getPath = async (path) => {
-    let response = await octokit.rest.repos.getContent({
-      owner: "yetanothercheer",
-      repo: "Archive",
-      path,
-      ref: isStaging ? "staging" : "main",
-    });
-    return response.data;
-  };
-
-  let list = (
-    await Promise.all(
-      (
-        await getPath("")
-      )
-        .filter((d) => d.type === "dir")
-        .sort((a, b) => {
-          const toNumber = (name) => {
-            let parts = name.split(".");
-            return parseInt(parts[0]) * 1000 + parseInt(parts[1]);
-          };
-          return toNumber(a.name) - toNumber(b.name);
-        })
-        .reverse()
-        .map((d) => d.path)
-        .map(async (path) => {
-          let data = await getPath(path);
-
-          data.sort((a, b) => {
-            const toNumber = (item) => {
-              //  strip ".json"
-              let isotime = item.name.split(".")[0];
-              return new Date(isotime).getTime();
-            };
-            return toNumber(a) - toNumber(b);
-          });
-          return data;
-        })
-    )
-  ).reduce((a, v) => [...v, ...a], []);
-
-  return list;
-};
-
-const fetcher = (...args) => fetch(...args).then((res) => res.json());
+import { getData, useLinkGetData } from './api';
 
 import { Link, Text } from "@fluentui/react";
 
@@ -203,7 +151,7 @@ const SubSection = ({ blogs }) => {
 };
 
 const Page = ({ link, full }) => {
-  const { data, error } = useSWR(link, fetcher);
+  const { data, error } = useLinkGetData(link);
 
   if (error) return <pre>Failed to load.</pre>;
   if (!data)
@@ -345,15 +293,55 @@ const appTheme = createTheme({
 });
 
 import { VirtualizedComboBox } from "@fluentui/react";
+import {
+  DatePicker,
+  DayOfWeek,
+  mergeStyles,
+  defaultDatePickerStrings,
+} from '@fluentui/react';
+
+
+const days = [
+  { text: 'Sunday', key: DayOfWeek.Sunday },
+  { text: 'Monday', key: DayOfWeek.Monday },
+  { text: 'Tuesday', key: DayOfWeek.Tuesday },
+  { text: 'Wednesday', key: DayOfWeek.Wednesday },
+  { text: 'Thursday', key: DayOfWeek.Thursday },
+  { text: 'Friday', key: DayOfWeek.Friday },
+  { text: 'Saturday', key: DayOfWeek.Saturday },
+];
+
+const rootClass = mergeStyles({
+  maxWidth: 300,
+  marginRight: 15,
+  marginTop: 6,
+  selectors: { '> *': { marginBottom: 15 } }
+});
+
+const MyDatePicker = ({ onDatePicked, defaultValue }) => {
+  return (
+    <div className={rootClass}>
+      <DatePicker
+        placeholder="Select a date..."
+        ariaLabel="Select a date"
+        strings={defaultDatePickerStrings}
+        maxDate={new Date()}
+        minDate={new Date("2021/09/04")}
+        onSelectDate={onDatePicked}
+        value={defaultValue}
+      />
+    </div>
+  );
+}
+
 
 const comboBoxStyles = { root: { maxWidth: "300px" } };
 
-function App() {
+function App({ storedTheme, setStoredTheme }) {
   const [link, setLink] = useState();
   const [full, setFull] = useState();
   const [error, setError] = useState();
-
-  const [storedTheme, setStoredTheme] = useStoredTheme("Light");
+  const [pick, setpick] = useState(new Date());
 
   useEffect(async () => {
     try {
@@ -376,117 +364,85 @@ function App() {
   }, []);
 
   const memorizedOptions = useMemo(() => {
-    return (
+    let ret = (
       full &&
-      full.map((f) => {
+      full.filter((f) => {
+        if (pick) {
+          let date1 = new Date(new Date(f.name.slice(0, -5)));
+          if (date1.getDate() == pick.getDate() && date1.getMonth() == pick.getMonth() && date1.getFullYear() == pick.getFullYear()) {
+            return true;
+          }
+        }
+        return false;
+      }).map((f) => {
         let v = filename2locale(f.name);
-        return { key: f.download_url, text: v };
+        return { key: v, text: v, url: f.download_url };
       })
     );
-  }, [full]);
+
+    if (ret && ret[0]) {
+      setLink(ret[0].url);
+    }
+    return ret;
+  }, [full, pick]);
 
   if (error) {
     return (
-      <ThemeProvider
-        style={{ height: "100%" }}
-        theme={createTheme({
-          palette: storedTheme.theme,
-        })}
-      >
-        <div
-          id="app-root"
-          style={{
-            padding: ".5em .5em",
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <Text variant="xLarge">Error</Text>
-          <Text variant="small" style={{ whiteSpace: "pre-wrap" }}>
-            {JSON.stringify(error, null, "\t")}
-          </Text>
-        </div>
-      </ThemeProvider>
+      <React.Fragment>
+        <Text variant="xLarge">Error</Text>
+        <Text variant="small" style={{ whiteSpace: "pre-wrap" }}>
+          {JSON.stringify(error, null, "\t")}
+        </Text>
+      </React.Fragment>
     );
   }
 
   if (!link || !full)
     return (
-      <ThemeProvider
-        style={{ height: "100%" }}
-        theme={createTheme({
-          palette: storedTheme.theme,
-        })}
-      >
-        <div id="app-root" style={{ padding: ".5em .5em", display: "flex" }}>
-          <Loading message="Getting data from https://github.com/yetanothercheer/Archive" />
-        </div>
-      </ThemeProvider>
+      <Loading message="Getting data from https://github.com/yetanothercheer/Archive" />
     );
 
   // render data
   return (
-    <ThemeProvider
-      style={{ minHeight: "100%" }}
-      theme={createTheme({
-        palette: storedTheme.theme,
-      })}
-    >
-      <div
-        id="app-root"
-        style={{
-          padding: ".5em .5em",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div style={{ flexBasis: "100%" }}>
-            {/* // https://github.com/microsoft/fluentui/issues/7561 */}
-            <VirtualizedComboBox
-              // defaultSelectedKey={link}
-              onChange={(e, o, i) => {
-                setLink(full[i].download_url);
-              }}
-              allowFreeform={false}
-              // autoComplete="on"
-              options={memorizedOptions}
-              // persistMenu={true}
-              // scrollSelectedToTop={true}
-              dropdownMaxWidth={300}
-              useComboBoxAsMenuWidth
-              styles={comboBoxStyles}
-              selectedKey={link}
-              onClick={() => {
-                // `scrollSelectedToTop` seems not working. A dirty workaround:
-                window.__workaround = setInterval(() => {
-                  const list = document.querySelector(".ms-Callout-main");
-                  if (list) {
-                    if (list.scrollTop == 0 && window.__workaround_saved != 0) {
-                      list.scrollTop = window.__workaround_saved;
-                    } else {
-                      window.__workaround_saved = list.scrollTop;
-                    }
-                  }
-                }, 100);
-              }}
-            />
-          </div>
-          <Theme storedTheme={storedTheme} setStoredTheme={setStoredTheme} />
-        </div>
-        <Text variant="small" block nowrap>
-          <span style={{ marginRight: ".2em" }}>Source:</span>
-          <Link target="_blank" href={link} underline>
-            {decodeURIComponent(link)}
-          </Link>
-        </Text>
-        <Link href="search">
-          <Text className="try_search" variant="mediumPlus" block nowrap>TRY SEARCH HERE</Text>
-        </Link>
 
-        <Page link={link} full={full} />
+    <React.Fragment
+    >
+
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <MyDatePicker onDatePicked={setpick} defaultValue={pick} />
+
+        <div style={{ flexBasis: "100%" }}>
+          {/* // https://github.com/microsoft/fluentui/issues/7561 */}
+          <VirtualizedComboBox
+            defaultSelectedKey={memorizedOptions[0] && memorizedOptions[0].key}
+            onChange={(e, o, i) => {
+              setLink(memorizedOptions[i].url);
+            }}
+            allowFreeform={false}
+            // autoComplete="on"
+            options={memorizedOptions}
+            // persistMenu={true}
+            // scrollSelectedToTop={true}
+            dropdownMaxWidth={300}
+            useComboBoxAsMenuWidth
+            styles={comboBoxStyles}
+          // selectedKey={link}
+          />
+        </div>
+        <Theme storedTheme={storedTheme} setStoredTheme={setStoredTheme} />
       </div>
-    </ThemeProvider>
+      <Text variant="small" block nowrap>
+        <span style={{ marginRight: ".2em" }}>Source:</span>
+        <Link target="_blank" href={link} underline>
+          {decodeURIComponent(link)}
+        </Link>
+      </Text>
+      {/* <Link href="search">
+        <Text className="try_search" variant="mediumPlus" block nowrap>TRY SEARCH HERE</Text>
+      </Link> */}
+
+      <Page link={link} full={full} />
+    </React.Fragment>
   );
 }
 
@@ -532,13 +488,60 @@ function SearchPage() {
   const [storedTheme, setStoredTheme] = useStoredTheme("Light");
 
   return (
-    <div>
+    <div style={{ paddingTop: 5 }}>
+
+      <TextField className="CHANGE_ME" style={{ caretColor: "auto" }} placeholder="Input and press Enter to search" onKeyPress={onKeyPress} />
+
+      {data && data.map((i, index) => (
+        <details key={index + i.filename} style={{ marginTop: ".5em" }}>
+          <summary>
+            <Text variant={"xLarge"}>
+              {index + 1} {i.title}
+            </Text>
+            <Text style={{ float: "right" }} variant={"small"}>
+              {
+                new Date(
+                  Date.parse(i.filename.match(/(((?!\/).)*)\.json/)[1])
+                ).toLocaleDateString()
+              }
+            </Text>
+          </summary>
+          <SubSection blogs={[i.hot, i.realtime]} />
+        </details>
+      ))}
+
+      {(page < totalPages) &&
+        <DefaultButton style={{ marginTop: "1em" }} text="LOAD MORE" onClick={onLoadMore} />
+      }
+
+    </div>
+  );
+
+
+}
+
+import { Icon, IStyleSet, Label, ILabelStyles, Pivot, IPivotItemProps, PivotItem } from '@fluentui/react';
+
+const labelStyles = {
+  root: { marginTop: 10 },
+};
+
+export default function () {
+  const [storedTheme, setStoredTheme] = useStoredTheme("Light");
+
+  return (
+    <React.Fragment>
       <ThemeProvider
         style={{ height: "100%" }}
         theme={createTheme({
           palette: storedTheme.theme,
         })}
       >
+        <div id="wip">
+          {/* <!-- image source: https://publicdomainvectors.org/photos/work-in-progress-woman_at_work-o-f-daisy.png --> */}
+          <img src={wip} />
+        </div>
+
         <div
           id="app-root"
           style={{
@@ -547,57 +550,18 @@ function SearchPage() {
             flexDirection: "column",
           }}
         >
+          <Pivot>
+            <PivotItem headerText="History" itemIcon="History">
+              <App storedTheme={storedTheme} setStoredTheme={setStoredTheme} />
+            </PivotItem>
+            <PivotItem headerText="Search" itemIcon="Search">
+              <SearchPage />
+            </PivotItem>
+          </Pivot>
 
-          <Link href=".">
-            <Text style={{ fontWeight: 350 }} variant={"small"}>
-              &lt; Go Back
-            </Text>
-          </Link>
-          <TextField className="CHANGE_ME" style={{ caretColor: "auto" }} label="Input and press Enter to search" onKeyPress={onKeyPress} />
-
-          {data && data.map((i, index) => (
-            <details key={index + i.filename} style={{ marginTop: ".5em" }}>
-              <summary>
-                <Text variant={"xLarge"}>
-                  {index + 1} {i.title}
-                </Text>
-                <Text style={{ float: "right" }} variant={"small"}>
-                  {
-
-                    new Date(
-                      Date.parse(i.filename.match(/(((?!\/).)*)\.json/)[1])
-                    ).toLocaleDateString()
-
-                  }
-                </Text>
-              </summary>
-              <SubSection blogs={[i.hot, i.realtime]} />
-            </details>
-          ))}
-
-          {(page < totalPages) &&
-            <DefaultButton style={{marginTop: "1em"}} text="LOAD MORE" onClick={onLoadMore} />
-          }
         </div>
+
       </ThemeProvider>
-    </div>
-  );
-
-
-}
-
-export default function () {
-  if (location.href.endsWith("/search")) {
-    return (<SearchPage />);
-  }
-
-  return (
-    <React.Fragment>
-      <div id="wip">
-        {/* <!-- image source: https://publicdomainvectors.org/photos/work-in-progress-woman_at_work-o-f-daisy.png --> */}
-        <img src={wip} />
-      </div>
-      <App />
     </React.Fragment>
   );
 }

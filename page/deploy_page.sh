@@ -1,7 +1,7 @@
 # exit when any command fails
 set -e
-yarn
-yarn build
+npm install --force
+npm run build
 cd build
 mv index.html 404.html
 rm -rf .git
