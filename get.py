@@ -77,7 +77,9 @@ async def get(url):
         if retry > 1:
             await asyncio.sleep(1)
         async with aiohttp.ClientSession() as session:
-            url = PROXIES[counter % len(PROXIES)] + parse.quote(original_url)
+            # glitch proxy has been blocked 2025/01/10
+            # url = PROXIES[counter % len(PROXIES)] + parse.quote(original_url)
+            url = original_url
             async with session.get(url) as resp:
                 status = resp.status
                 if status != 200:
