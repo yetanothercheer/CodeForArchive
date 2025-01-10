@@ -47,7 +47,7 @@ fastify.get("/api", async function(request, reply) {
 
 counter = 0
 rate_limit = []
-CONN_PER_SECOND = 10
+CONN_PER_SECOND = 2
 
 from dataclasses import dataclass
 
