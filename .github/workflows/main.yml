@@ -6,32 +6,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  merge_schedule_for_checked_pull_reqeust:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: gr2m/merge-schedule-action@v1
-        with:
-          merge_method: rebase
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Wait a second
-        run: |
-          sleep 1
-
   archive:
-    needs: merge_schedule_for_checked_pull_reqeust
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-python@v3
+      - name: ⬇️ Checkout Repository
+        uses: actions/checkout@v4
+      - name: 🔧 Install Headless Chrome System Dependencies (Fix shared library errors)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libatk-bridge2.0-0 libgtk-3-0 libgbm-dev libgbm-dev libasound2t64
+      - name: ⚙️ Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: "3.10"
-        env:
-          PIP_DISABLE_PIP_VERSION_CHECK: 1
-
+          node-version: 22
       - name: Run
         run: |
-          make install
-          MY_GITHUB_TOKEN=${{ secrets.MY_GITHUB_TOKEN }} make prod
+          cd weibo_crawler && npm install && node weibo_crawler.js
+        env:
+          MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          WEIBO_ENV: prod

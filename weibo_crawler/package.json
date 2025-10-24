@@ -1,0 +1,17 @@
+{
+  "name": "weibo_crawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "weibo_crawler.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.1.2",
+    "puppeteer": "^24.26.1"
+  }
+}

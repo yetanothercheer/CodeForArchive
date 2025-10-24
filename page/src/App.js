@@ -97,12 +97,15 @@ const SubSection = ({ blogs }) => {
           >
             {
               blog.pic_ids && (
-                <Images
-                  images={blog.pic_ids.map(
-                    (id) =>
-                      `https://sandy-special-gem.glitch.me/api?url=https://wx1.sinaimg.cn/large/${id}.jpg`
-                  )}
-                />
+                // <Images
+                //   images={blog.pic_ids.map(
+                //     (id) =>
+                //       // `https://sandy-special-gem.glitch.me/api?url=https://wx1.sinaimg.cn/large/${id}.jpg`
+                //       `https://wx1.sinaimg.cn/large/${id}.jpg`
+                //   )}
+                // />
+                // blog.pic_ids.map(id => <Text variant={"small"}>https://wx1.sinaimg.cn/large/${id}.jpg</Text>)
+                <></>
               )
               // blog.pic_ids.map(id => (
               //   <div>
@@ -554,9 +557,9 @@ export default function () {
             <PivotItem headerText="History" itemIcon="History">
               <App storedTheme={storedTheme} setStoredTheme={setStoredTheme} />
             </PivotItem>
-            <PivotItem headerText="Search" itemIcon="Search">
+            {/* <PivotItem headerText="Search" itemIcon="Search">
               <SearchPage />
-            </PivotItem>
+            </PivotItem> */}
           </Pivot>
 
         </div>
