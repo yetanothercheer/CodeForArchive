@@ -1,1 +1,0 @@
-sudo apt-get update && sudo apt-get install -y libatk-bridge2.0-0 libgtk-3-0 libgbm-dev libgbm-dev libasound2t64
