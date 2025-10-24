@@ -230,7 +230,8 @@ class Browser {
         try {
             const launchArgs = [
                 `--window-size=540,960`,
-                `--ignore-certificate-errors` 
+                `--ignore-certificate-errors`,
+                '--no-sandbox'
             ];
             
             // Per request: No proxy for any environment.
