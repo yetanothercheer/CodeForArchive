@@ -15,4 +15,4 @@ jobs:
 
       - name: Run
         run: |
-          git diff --quiet HEAD~1 HEAD -- page || MY_GITHUB_TOKEN=${{ secrets.MY_GITHUB_TOKEN }} cd page && sh deploy_page.sh
+          git diff --quiet HEAD~1 HEAD -- page || MY_GITHUB_TOKEN=${{ secrets.MY_GITHUB_TOKEN }} bash -c "cd page && sh deploy_page.sh"
